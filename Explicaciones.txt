@@ -1,0 +1,289 @@
+Explicación de los Componentes de IA en la Aplicación
+
+En nuestra aplicación, usamos tres tecnologías clave de Inteligencia Artificial para hacerla más "inteligente" y potente: OpenAI, LangChain y FAISS. Aunque están relacionadas, cada una cumple una función muy específica.
+Imaginemos que nuestra IA es como un asistente de investigación experto.
+1. OpenAI (El "Cerebro" Lingüístico)
+¿Qué es? Es el proveedor de los grandes modelos de lenguaje (LLM), como GPT-3.5 o GPT-4. Piensa en OpenAI como el cerebro que tiene una comprensión profunda del lenguaje humano. Es capaz de entender preguntas, generar texto coherente, resumir información y razonar sobre el lenguaje.
+¿Qué función cumple en nuestra aplicación?
+Generación de Texto y Respuestas: Es el componente que realmente "escribe" las respuestas en un chatbot. Cuando un usuario pregunta "¿Qué tecnologías son buenas para un proyecto móvil?", es el modelo de OpenAI el que genera la respuesta: "Para un proyecto móvil, tecnologías como React Native o Flutter para el frontend son excelentes opciones porque...".
+Razonamiento y Síntesis: Si le damos un contexto (como los detalles de un colaborador o un proyecto), puede razonar sobre esa información y crear un resumen o un análisis. Por ejemplo, podría generar el "suggestion_analysis" que vimos antes.
+En resumen: OpenAI es el motor de lenguaje que da a nuestra IA la capacidad de conversar y generar texto con calidad humana.
+2. FAISS (La "Memoria" Súper Rápida)
+¿Qué es? FAISS (Facebook AI Similarity Search) es una biblioteca especializada en una sola cosa: buscar similitud semántica a una velocidad increíble. No entiende el lenguaje, pero es extremadamente bueno encontrando cosas parecidas en una gran colección de datos.
+¿Cómo funciona?
+Indexación: Primero, tomamos información textual de nuestros colaboradores (como sus roles, tecnologías, y quizás un resumen de su experiencia) y la convertimos en vectores numéricos (embeddings) usando un modelo como sentence-transformers. Un embedding es una representación matemática del significado de un texto.
+Almacenamiento: FAISS toma todos estos vectores y los organiza en una estructura de datos altamente optimizada, como un índice de una base de datos, que se guarda en el archivo embeddings.faiss. Piensa en esto como crear un "mapa de significados" de todos nuestros colaboradores.
+Búsqueda: Cuando un usuario describe lo que necesita (ej. "busco un experto en bases de datos para aplicaciones web"), convertimos esa descripción en un vector numérico también. Luego, le preguntamos a FAISS: "En tu mapa, ¿cuáles son los 5 vectores (colaboradores) que están más cerca de este nuevo vector (la consulta)?"
+¿Qué función cumple en nuestra aplicación?
+Búsqueda Semántica: Permite encontrar a los colaboradores más relevantes para una descripción de proyecto, incluso si las palabras no coinciden exactamente. Por ejemplo, si el usuario pide "experto en aplicaciones en la nube" y un colaborador tiene "experiencia en AWS y Azure", FAISS puede reconocer que son conceptos semánticamente similares y encontrar a ese colaborador.
+Memoria a Largo Plazo para el Chatbot: FAISS actúa como la memoria de nuestra IA. Cuando el chatbot necesita responder una pregunta sobre nuestros colaboradores, en lugar de enviar la información de los cientos de empleados a OpenAI en cada consulta (lo cual sería lento y muy caro), primero usamos FAISS para encontrar los 2 o 3 colaboradores más relevantes para la pregunta.
+En resumen: FAISS es la memoria optimizada de nuestra IA. No piensa, pero encuentra la información relevante a la velocidad de la luz para que el "cerebro" (OpenAI) pueda usarla.
+3. LangChain (El "Sistema Nervioso" que Conecta Todo)
+¿Qué es? LangChain no es una IA en sí misma. Es un framework de orquestación. Es el "pegamento" o el "sistema nervioso" que conecta el "cerebro" (OpenAI) con la "memoria" (FAISS) y otras herramientas.
+¿Qué función cumple en nuestra aplicación?
+Orquestación de Cadenas (Chains): LangChain nos permite construir "cadenas" de operaciones lógicas de forma sencilla. Por ejemplo, para responder a una pregunta del chatbot, LangChain define los pasos:
+Paso 1 (Entrada): Recibir la pregunta del usuario.
+Paso 2 (Búsqueda en Memoria): Usar la pregunta para hacer una búsqueda en FAISS y obtener los datos de los colaboradores más relevantes.
+Paso 3 (Construcción del Prompt): Crear un "prompt" (una instrucción) para OpenAI que combine la pregunta original del usuario con el contexto encontrado en FAISS. Ejemplo: "Eres un asistente de RRHH. Responde la siguiente pregunta del usuario: '¿Quién es bueno con bases de datos?'. Usa la siguiente información de contexto para basar tu respuesta: [Datos de los colaboradores encontrados en FAISS]".
+Paso 4 (Llamada al Cerebro): Enviar este prompt completo a OpenAI.
+Paso 5 (Salida): Recibir la respuesta generada por OpenAI y entregarla al usuario.
+Agentes (Más avanzado): LangChain también permite crear "agentes" que pueden decidir dinámicamente qué herramienta usar. Por ejemplo, si el usuario pregunta "¿Qué hora es?", el agente podría decidir usar una herramienta de "reloj" en lugar de llamar a OpenAI.
+En resumen: LangChain es el director de orquesta. No toca ningún instrumento, pero se asegura de que la memoria (FAISS) y el cerebro (OpenAI) trabajen juntos en el orden correcto para producir una respuesta inteligente y contextualizada.
+Diagrama Simplificado del Flujo del Chatbot
+Generated mermaid
+graph TD
+    A[Usuario: "¿Quién es experto en Python para backend?"] --> B[LangChain];
+    B -- "1. Recibe pregunta" --> B;
+    B -- "2. Busca contexto en Memoria" --> C[FAISS];
+    C -- "3. Devuelve colaboradores relevantes (ej. Juan, Ana)" --> B;
+    B -- "4. Construye Prompt con Pregunta + Contexto" --> D[OpenAI];
+    D -- "5. Genera respuesta" --> B;
+    B -- "6. Entrega respuesta final" --> E[Respuesta al Usuario: "Juan Pérez y Ana García son buenas opciones. Juan tiene experiencia en Django..."];
+
+    style B fill:#f9f,stroke:#333
+    style C fill:#D5F5E3,stroke:#333
+    style D fill:#E8DAEF,stroke:#333
+
+
+El concepto clave son las Herramientas (Tools) y los Agentes (Agents).
+
+1. Herramientas (Tools): Las Habilidades Específicas de la IA
+Antes de que un agente pueda hacer algo, tenemos que darle "habilidades" o "herramientas" que pueda usar. Una herramienta en LangChain es básicamente una función de Python envuelta de tal manera que el agente entienda qué hace.
+Para tu caso de uso, definiríamos dos herramientas personalizadas:
+Herramienta 1: Búsqueda en la Base de Datos de Colaboradores (collaborator_db_tool)
+Función Interna: Esta herramienta envolvería una función de Python que se conecta a tu MongoDB y busca colaboradores. Podría aceptar parámetros como nombre, rol o tecnologia.
+Descripción para el Agente (¡Esto es lo crucial!): Le damos a la herramienta una descripción en lenguaje natural que el LLM (OpenAI) pueda entender. Por ejemplo:
+"Útil para cuando necesitas buscar información específica sobre colaboradores, sus roles, seniorities o tecnologías que conocen. La entrada debe ser el nombre, rol o tecnología a buscar."
+Ejemplo de cómo funciona: Si el agente decide usar esta herramienta, LangChain ejecutará tu función de búsqueda en MongoDB y devolverá los resultados como texto.
+Herramienta 2: Búsqueda en los Archivos README (readme_search_tool)
+Función Interna: Esta herramienta envolvería una función que:
+Lee el contenido de tus archivos Readme.md, Readme_IA.md, etc.
+Utiliza una técnica de búsqueda para encontrar información relevante. Podría ser una búsqueda simple de palabras clave o, de forma más avanzada, podría usar un índice FAISS construido a partir de los READMEs (un "Retriever").
+Descripción para el Agente:
+"Útil para cuando necesitas responder preguntas sobre la arquitectura del proyecto, cómo instalarlo, la tecnología que usa, los endpoints de la API o cómo funciona la IA. La entrada debe ser la pregunta del usuario sobre el proyecto."
+Ejemplo de cómo funciona: Si el agente usa esta herramienta, LangChain ejecutará tu función de búsqueda en los READMEs y devolverá los fragmentos de texto más relevantes.
+2. Agentes (Agents): El Tomador de Decisiones
+Un agente es un ciclo de razonamiento que usa un LLM (OpenAI) para decidir qué hacer. En lugar de seguir una cadena fija de pasos, el agente puede pensar.
+¿Cómo funciona el ciclo de un Agente?
+Imagina que el usuario pregunta: "¿Qué tecnologías usa el recomendador y quién es el mejor desarrollador Senior de React?"
+Entrada: El agente recibe la pregunta completa.
+"Pensamiento" (Llamada a OpenAI): LangChain le pasa la pregunta al LLM junto con la lista de herramientas disponibles y sus descripciones. Le pide algo como:
+Prompt para el LLM: "Eres un agente asistente. Tienes acceso a las siguientes herramientas:
+collaborator_db_tool: Útil para buscar información sobre colaboradores, roles, etc.
+readme_search_tool: Útil para responder preguntas sobre la arquitectura, instalación o funcionamiento del proyecto.
+La pregunta del usuario es: '¿Qué tecnologías usa el recomendador y quién es el mejor desarrollador Senior de React?'.
+¿Qué herramienta debes usar AHORA y con qué entrada? Responde en formato JSON { 'tool': 'nombre_herramienta', 'input': 'entrada_para_la_herramienta' }."
+Decisión de la Herramienta: El LLM, gracias a su capacidad de razonamiento, entiende que la pregunta tiene dos partes. Podría decidir abordar la primera. Su respuesta (lo que "piensa") sería algo como:
+Respuesta del LLM: { "tool": "readme_search_tool", "input": "tecnologías que usa el recomendador" }
+Ejecución de la Herramienta: LangChain recibe esta respuesta, ve que el agente quiere usar la herramienta readme_search_tool y ejecuta la función Python correspondiente.
+La función busca en los READMEs y encuentra el texto: "Decisiones Técnicas: FastAPI, Sentence-BERT, FAISS, Pandas, React + Vite".
+LangChain toma este resultado (la "Observación").
+Nuevo "Pensamiento" (Segundo Ciclo): Ahora, LangChain vuelve a llamar al LLM, pero con más información:
+Prompt para el LLM: "OK, ya ejecutaste la herramienta readme_search_tool y la observación fue: 'Decisiones Técnicas: FastAPI, Sentence-BERT, FAISS, Pandas, React + Vite'.
+La pregunta original del usuario era: '¿Qué tecnologías usa el recomendador y quién es el mejor desarrollador Senior de React?'.
+Ya tienes la respuesta a la primera parte. ¿Qué herramienta necesitas usar AHORA para responder la segunda parte?"
+Segunda Decisión: El LLM ahora se enfoca en "quién es el mejor desarrollador Senior de React".
+Respuesta del LLM: { "tool": "collaborator_db_tool", "input": "desarrollador Senior React" }
+Segunda Ejecución: LangChain ejecuta la herramienta collaborator_db_tool.
+Tu función de Python busca en MongoDB colaboradores con rol mapeado a frontend o fullstack, seniority Senior y tecnología React.
+Supongamos que devuelve: "Gino Javier Carignano (score: 80), Mauricio Javier Aragno (score: 78.88)".
+"Pensamiento" Final: LangChain llama al LLM una última vez:
+Prompt para el LLM: "OK, ya usaste las herramientas y tienes estas observaciones:
+Tecnologías del recomendador: FastAPI, Sentence-BERT, FAISS, Pandas, React + Vite.
+Desarrolladores Senior de React: Gino Javier Carignano (score: 80), Mauricio Javier Aragno (score: 78.88).
+La pregunta original del usuario era: '¿Qué tecnologías usa el recomendador y quién es el mejor desarrollador Senior de React?'.
+Ahora tienes toda la información. Por favor, genera la respuesta final para el usuario."
+Respuesta Final: El LLM (OpenAI) sintetiza toda la información y genera la respuesta final en lenguaje natural:
+Respuesta Final al Usuario: "La aplicación utiliza tecnologías como FastAPI, Sentence-BERT, FAISS y React. Basado en el scoring, el desarrollador Senior de React mejor calificado es Gino Javier Carignano."
+Diagrama Simplificado del Flujo del Agente
+Generated mermaid
+graph TD
+    A[Usuario: Pregunta Compleja] --> B{Agente (LangChain + OpenAI)};
+    B -- "1. Piensa: ¿Qué necesito saber primero?" --> B;
+    B -- "2. Decide usar Herramienta A\n(ej. Búsqueda en README)" --> C[Tool: readme_search_tool];
+    C -- "3. Ejecuta y devuelve Observación A" --> B;
+    B -- "4. Piensa de nuevo con Observación A" --> B;
+    B -- "5. Decide usar Herramienta B\n(ej. Búsqueda en BD)" --> D[Tool: collaborator_db_tool];
+    D -- "6. Ejecuta y devuelve Observación B" --> B;
+    B -- "7. Piensa de nuevo con A y B" --> B;
+    B -- "8. Decide: 'Tengo suficiente información'" --> B;
+    B -- "9. Genera Respuesta Final" --> E[Respuesta Sintetizada al Usuario];
+
+    style B fill:#f9f,stroke:#333
+    style C fill:#D5F5E3,stroke:#333
+    style D fill:#D5F5E3,stroke:#333
+En resumen, los agentes le dan a tu IA la capacidad de descomponer problemas complejos, elegir la herramienta adecuada para cada parte del problema, ejecutarla, y luego sintetizar los resultados en una única respuesta coherente. Es una forma mucho más dinámica y poderosa de usar LangChain.
+
+
+
+Documento Explicativo: El Asistente de IA "Rubiko"
+1. ¿Qué es y qué hace Rubiko?
+
+Rubiko es un asistente virtual avanzado diseñado para ser el analista de datos experto de nuestra aplicación. Su propósito es permitir que cualquier usuario, sin importar su conocimiento técnico, pueda hacer preguntas complejas en español y obtener respuestas precisas y en tiempo real sobre el estado de nuestros colaboradores, proyectos y vacantes.
+
+En resumen, Rubiko traduce el lenguaje humano a respuestas basadas en datos.
+
+Capacidades Clave:
+
+Responde preguntas sobre métricas: Puede calcular y presentar KPIs como "¿Cuántos colaboradores activos tenemos?" o "¿Cuál es la distribución de roles en el equipo?".
+
+Busca en la documentación: Puede responder preguntas conceptuales como "¿Qué es la arquitectura del sistema?" buscando en nuestros manuales internos (READMEs).
+
+Genera reportes: Puede crear listados de datos (ej. "dame la lista de desarrolladores backend") y proporcionar enlaces para descargar informes en formato CSV/Excel.
+
+Funciona de forma segura: Nunca accede a la base de datos directamente, garantizando la seguridad de nuestros datos.
+
+2. ¿Cómo funciona? La Arquitectura de Tres Cerebros
+
+Rubiko no es un único programa, sino un sistema de tres componentes que colaboran entre sí. Esta arquitectura de microservicios lo hace seguro, robusto y fácil de mantener.
+
+El Corazón (Nuestro Backend en Node.js):
+
+Este es el centro de nuestra lógica de negocio.
+
+Contiene un endpoint de API especial (/api/dashboard/metrics) que es el único que tiene permiso para consultar nuestra base de datos MongoDB.
+
+Este endpoint calcula todas las métricas importantes y las empaqueta en un formato JSON limpio y seguro. Es nuestra fuente única de la verdad.
+
+El Cerebro Lingüístico (El Motor de IA en Python):
+
+Este es el servicio que aloja a Rubiko. Su trabajo es entender el lenguaje, no los datos.
+
+Utiliza una serie de herramientas de IA para procesar la pregunta del usuario y obtener una respuesta.
+
+La Interfaz (Nuestro Frontend en Next.js):
+
+Es la ventana de chat a través de la cual los usuarios hablan con Rubiko.
+
+3. Las Herramientas de IA: LangChain, OpenAI y FAISS
+
+El "cerebro" de Rubiko utiliza tres tecnologías de IA de vanguardia que trabajan en conjunto:
+
+a) OpenAI (El Motor de Razonamiento)
+
+¿Qué es?: Es el modelo de lenguaje grande (LLM), como GPT-4 Turbo. Es un cerebro artificial entrenado para entender y generar lenguaje humano a un nivel muy avanzado.
+
+¿Qué hace en Rubiko?:
+
+Clasifica la Intención: Lee la pregunta del usuario y decide si es una pregunta sobre métricas (datos) o una pregunta general (conocimiento).
+
+Sintetiza la Respuesta: Una vez que las otras herramientas le traen los datos crudos (un JSON de la API o un texto de la documentación), OpenAI se encarga de redactar la respuesta final de una forma amigable, coherente y en español.
+
+b) LangChain (El Director de Orquesta)
+
+¿Qué es?: Es un framework que actúa como el "sistema nervioso" de Rubiko. Es el pegamento que conecta el cerebro (OpenAI) con las herramientas.
+
+¿Qué hace en Rubiko?:
+
+Gestiona el Agente: Implementa un Agente que sigue un ciclo de Razonar y Actuar. LangChain le presenta la pregunta al cerebro y le pregunta: "¿Qué deberíamos hacer ahora?".
+
+Orquesta las Herramientas: Basado en la respuesta del cerebro, LangChain ejecuta la herramienta correcta. Si el cerebro dice "necesito métricas", LangChain activa la herramienta que llama a nuestra API de Node.js. Si dice "necesito buscar en la documentación", activa la herramienta de FAISS.
+
+c) FAISS (La Biblioteca de Búsqueda Semántica)
+
+¿Qué es?: Es una librería de Facebook AI para realizar búsquedas por similitud ultra-rápidas.
+
+¿Qué hace en Rubiko?: Es el motor de nuestra "memoria a largo plazo".
+
+Indexa el Conocimiento: Durante el arranque, convertimos toda nuestra documentación (READMEs) en representaciones numéricas (vectores) y las guardamos en un índice FAISS.
+
+Encuentra Respuestas Conceptuales: Cuando un usuario pregunta algo como "¿Cómo funciona la arquitectura?", FAISS no busca palabras clave. Busca el párrafo en toda nuestra documentación que semánticamente (por significado) se parezca más a la pregunta, y se lo entrega al cerebro (OpenAI) para que lo resuma.
+
+4. Adaptabilidad: ¿Cómo se puede adaptar Rubiko a otras aplicaciones?
+
+La arquitectura de Rubiko es altamente portable precisamente porque la IA está desacoplada de la base de datos. Para llevar a Rubiko a una nueva aplicación (por ejemplo, una que use una base de datos SQL), solo hay dos caminos:
+
+El Camino Rápido (Recomendado):
+
+Acción: En la nueva aplicación, se crea un endpoint de API (ej. /api/analytics) que consulte la base de datos SQL y devuelva un JSON con las métricas clave.
+
+Cambio en Rubiko: Se modifica una sola línea de código en el chat.py para que la herramienta de métricas apunte a la nueva URL.
+
+Resultado: La migración se completa en minutos, manteniendo la máxima seguridad y eficiencia.
+
+El Camino Avanzado (Agente SQL):
+
+Acción: Se le da a Rubiko acceso de solo lectura a la nueva base de datos SQL.
+
+Cambio en Rubiko: Se reemplaza la herramienta de API por el SQLDatabaseToolkit de LangChain.
+
+Resultado: Rubiko se convierte en un analista de datos SQL autónomo. Puede entender el esquema de la base de datos y generar sus propias consultas SQL complejas al momento para responder a preguntas que nunca antes había visto. Este enfoque ofrece una flexibilidad casi infinita.
+
+
+¿Cómo se Aplicaría Rubiko en un Entorno Médico?
+Rubiko podría transformarse en un "Asistente Clínico y Operativo" para diferentes perfiles dentro de un hospital, clínica o centro de investigación.
+Casos de Uso Potenciales:
+Para Médicos y Personal Clínico (en el punto de atención):
+Resumen de Paciente: "Rubiko, dame un resumen del historial del paciente Juan Pérez de la habitación 302. Enfócate en alergias, últimos laboratorios y medicación actual."
+Soporte a la Decisión Clínica: "¿Cuáles son los protocolos de tratamiento recomendados para una neumonía adquirida en la comunidad en un paciente diabético?" (Buscando en guías clínicas internas).
+Consulta de Interacciones: "¿Hay interacciones conocidas entre la Warfarina y el Ibuprofeno?" (Conectándose a una base de datos farmacológica externa).
+Para Administradores de Hospital y Gerentes:
+Métricas Operativas: "¿Cuál es el tiempo de espera promedio en urgencias esta semana?"
+Gestión de Recursos: "¿Cuántas camas de UCI tenemos disponibles en este momento?"
+Análisis de Flujo: "Muéstrame el número de admisiones por día del último mes."
+Para Investigadores:
+Búsqueda de Pacientes: "Encuentra todos los pacientes anonimizados mayores de 50 años con diagnóstico de diabetes tipo 2 y un nivel de HbA1c por encima de 8% en el último año." (Una consulta que hoy llevaría horas).
+Modificaciones de Arquitectura y Herramientas (¡Cruciales!)
+Para que Rubiko pueda operar de forma segura y eficaz en un entorno médico, la arquitectura offline que discutimos se vuelve obligatoria, y las herramientas necesitarían una especialización mucho mayor.
+1. Modo 100% Offline y Alojamiento Local (No Negociable)
+El Cerebro (LLM): Se descartaría por completo el uso de APIs en la nube como OpenAI. Sería mandatorio instalar y ejecutar un Modelo de Lenguaje de Código Abierto (como Llama 3 o un modelo especializado en medicina como Med-PaLM) en un servidor local y seguro dentro de la propia red del hospital.
+Privacidad Total: Esto garantiza que ningún dato del paciente (PHI - Protected Health Information) salga jamás de la infraestructura controlada por la institución, cumpliendo con regulaciones como HIPAA (en EE. UU.) o normativas de protección de datos locales.
+2. Herramientas Especializadas y Conectores Médicos
+El "cerebro" local se conectaría a un nuevo conjunto de herramientas de alta precisión:
+Conector al EMR/EHR (Historia Clínica Electrónica):
+Herramienta: obtener_historial_paciente(id_paciente).
+Función: Esta herramienta se conectaría de forma segura a la API del sistema de historias clínicas del hospital (como Cerner, Epic, etc.) para extraer datos estructurados del paciente.
+Herramienta de Búsqueda en Guías Clínicas y Literatura (RAG Médico):
+Función: Se crearía un índice FAISS no con READMEs, sino con:
+Guías de práctica clínica internas del hospital.
+Protocolos de tratamiento.
+Artículos de investigación curados de fuentes como PubMed.
+Resultado: Cuando un médico pregunta por un protocolo, el asistente no "alucina", sino que encuentra y resume la directriz oficial.
+Herramienta de Base de Datos Farmacológica:
+Función: Se conectaría a una base de datos de medicamentos (como RxNorm o una API comercial) para responder preguntas sobre dosis, efectos secundarios e interacciones.
+Herramienta de Análisis de Datos Anonimizados:
+Función: Para los administradores e investigadores, se crearía una herramienta que consulte una versión anonimizada o un data warehouse de la base de datos principal, nunca los datos en vivo. Esto permite calcular métricas operativas y hacer análisis de cohortes sin exponer la identidad de los pacientes.
+Diagrama de Flujo de una Consulta Médica
+Pregunta: "Resumen del paciente en la 302"
+Generated code
+Médico
+   |
+   v
+[App Móvil Segura] --(Petición encriptada)--> [Servidor de IA (Local)]
+                                                 |
+                                                 v
+[Agente LangChain]
+   |
+   v
+[Cerebro (LLM Local)] --> "Intención: Resumen de Paciente. Necesito ID."
+   |
+   v
+[Agente] --> Llama a herramienta `buscar_id_paciente_por_habitacion(302)`
+   |
+   v
+(La herramienta consulta el sistema de admisión del hospital)
+   |
+   v
+[Agente] --> "Observación: ID del paciente es 12345"
+   |
+   v
+[Agente] --> "Ahora necesito el historial. Uso la herramienta `obtener_historial_paciente`"
+   |
+   v
+[Herramienta] --(Llamada a la API del EHR)--> [Sistema de Historia Clínica]
+   |
+   v
+[Herramienta] <-- Recibe un JSON con alergias, labs, medicación
+   |
+   v
+[Agente] --> "Observación: (JSON con datos del paciente)"
+   |
+   v
+[Cerebro (LLM Local)] --> Sintetiza todo en un resumen clínico conciso.
+   |
+   v
+[Servidor de IA] --(Respuesta encriptada)--> [App Móvil Segura]
+Use code with caution.
+Conclusión
+Sí, es absolutamente posible y es el futuro de la informática médica. Sin embargo, no es un simple "copiar y pegar". Requiere una transición a una arquitectura 100% offline y un rediseño de las herramientas para que interactúen con los sistemas de información médica (APIs de EHR, bases de datos farmacológicas, etc.) de forma segura y estructurada.
+La base que has construido con Rubiko es el prototipo perfecto para demostrar el concepto y el valor de esta tecnología.

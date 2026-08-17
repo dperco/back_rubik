@@ -1,0 +1,65 @@
+
+.css-1ll44ll-MuiOutlinedInput-notchedOutline {
+  border-color: #07141d00 !important;
+}
+.css-16wblaj-MuiInputBase-input-MuiOutlinedInput-input {
+  padding: 0% !important;
+}
+.css-113d811-MuiFormLabel-root-MuiInputLabel-root {
+  background-color: white !important;
+}
+.css-t252yj-MuiPaper-root {
+  box-shadow: none !important;
+  max-width: 1000px !important;
+}
+.css-113d811-MuiFormLabel-root-MuiInputLabel-root.Mui-focused {
+  color: #000000 !important;
+}
+.css-aijj6w-MuiButtonBase-root-MuiButton-root {
+  background-color: #002338 !important;
+  color: #23ffdc !important;
+  width: 200px !important;
+  height: 50px !important;
+  font-weight: 500 !important;
+  font-size: 20px !important;
+  line-height: 30px !important;
+  letter-spacing: 0% !important;
+  box-shadow: none !important;
+  padding: 13px 41px 13px 41px !important;
+  gap: 10px !important;
+  border-radius: 20px !important ;
+  opacity: 0px !important;
+}
+.css-t252yj-MuiPaper-root {
+  box-shadow: none !important;
+  max-width: 1000px !important;
+  max-height: 510px !important;
+}
+.search-card-toggle-modal-close-bt {
+  margin-top: 0% !important;
+}
+.botoncerrar {
+  width: 200px !important;
+  height: 50px !important;
+  color: #0087ff;
+  font-weight: 500 !important;
+  font-size: 20px !important;
+  line-height: 30px !important;
+  letter-spacing: 0% !important;
+  box-shadow: none !important;
+  background-color: rgb(255, 255, 255);
+  border-radius: 20px !important;
+  border-width: 1px !important;
+  gap: 10px;
+  padding-top: 13px !important;
+  padding-right: 41px !important;
+  padding-bottom: 13px !important;
+  padding-left: 41px !important;
+  border: 2px solid #0087ff !important;
+}
+.css-1pzfmz2-MuiInputBase-input-MuiOutlinedInput-input{
+  padding: 1px 14px !important;
+}
+.css-hvjq6j-MuiFormLabel-root-MuiInputLabel-root{
+  background: white;
+}

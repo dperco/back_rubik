@@ -1,0 +1,169 @@
+/* Contenedor principal */
+.search-card-toggle-container {
+  display: flex;
+  gap: 20px;
+  padding-left: 60px;
+  flex-wrap: wrap;
+}
+
+/* Estilo del botón de cambiar vista */
+.search-card-toggle-btn {
+  height: 50px;
+  width: 150px;
+  background-color: #002338;
+  color: white;
+  border-radius: 20px;
+  text-transform: none;
+  font-size: 1rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.search-card-toggle-btn:hover {
+  background-color: #4067cc;
+  box-shadow: 0 6px 20px 0 rgba(79, 130, 255, 0.6);
+  transform: translateY(-1px);
+}
+
+.search-card-toggle-btn:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 10px 0 rgba(79, 130, 255, 0.4);
+}
+
+/* Caja de búsqueda */
+.search-card-toggle-search-box {
+  display: flex;
+  align-items: center;
+  border-radius: 20px;
+  border: 1px solid black;
+  box-shadow: 4px;
+  padding: 0px 8px;
+  background-color: #fff;
+  width: 590px;
+  height: 50px;
+}
+
+.search-card-toggle-search-input {
+  flex-grow: 1;
+  width: 100%;
+}
+
+/* Estilo del botón de agregar */
+.search-card-toggle-add-btn {
+  width: 150px;
+  height: 50px;
+  background-color: #23ffdc;
+  color: #000;
+  box-shadow: 100px;
+  border-radius: 20px;
+  font-size: 1rem;
+  text-transform: none;
+  padding: 0;
+  transition: all 0.2s ease-in-out;
+  border: none;
+}
+
+.search-card-toggle-add-btn:hover {
+  background-color: #21caae;
+  transform: translateY(-1px);
+}
+
+/* Modal */
+.search-card-toggle-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 1100px;
+  height: auto;
+  background-color: white;
+  border: 2px solid #4f82ff;
+  box-shadow: 24px;
+  border-radius: 12px;
+  padding: 20px;
+  text-align: center;
+}
+
+.search-card-toggle-modal-close-btn {
+  margin-top: 10px;
+}
+
+@media (max-width: 768px) {
+  .search-card-toggle-container {
+    padding-left: 20px;
+    gap: 20px;
+    justify-content: center;
+  }
+
+  .search-card-toggle-search-box {
+    margin-bottom: 10px;
+  }
+  .search-card-toggle-btn {
+    margin-left: 20px;
+  }
+  .search-card-toggle-btn,
+  .search-card-toggle-add-btn {
+    width: calc(50% - 10px);
+    height: 50px;
+    margin: 0;
+  }
+
+  /* Ajuste para mover el botón de "Agregar" hacia arriba */
+  .search-card-toggle-add-btn {
+    position: relative;
+    left: 300px;
+    top: -70px;
+  }
+}
+
+/* Estilo para pantallas medianas (hasta 1024px) */
+@media (max-width: 1024px) {
+  .search-card-toggle-container {
+    flex-direction: column; /* Cambiar a columna en pantallas medianas */
+    padding-left: 55px; /* Ajustar espacio a la izquierda */
+    gap: 20px; /* Espacio entre los botones */
+  }
+  .search-card-toggle-search-box {
+    width: 91%; /* Ajustar el ancho de la caja de búsqueda */
+  }
+  .search-card-toggle-btn {
+    width: 150px;
+  }
+  .search-card-toggle-add-btn {
+    width: 150px;
+    top: -70px;
+    left: 443px;
+  }
+}
+@media (min-width: 1920px) {
+  .search-card-toggle-container {
+    display: flex;
+    gap: 30px;
+    padding-left: 60px;
+    flex-wrap: wrap;
+  }
+  .search-card-toggle-search-box {
+    display: flex;
+    align-items: center;
+    border-radius: 20px;
+    border: 1px solid black;
+    box-shadow: 4px;
+    padding: 0px 8px;
+    background-color: #fff;
+    width: 990px;
+    height: 50px;
+  }
+  .search-card-toggle-add-btn {
+    width: 150px;
+    height: 50px;
+    background-color: #23ffdc;
+    color: #000;
+    box-shadow: 100px;
+    border-radius: 20px;
+    font-size: 1rem;
+    text-transform: none;
+    padding: 0;
+    transition: all 0.2s ease-in-out;
+    border: none;
+    margin-left: 436px; /* Solo ajusta el espacio en el botón de agregar */
+  }
+}

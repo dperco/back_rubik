@@ -1,0 +1,4700 @@
+
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Planilla Rubik API",
+    "version": "v1.0.0",
+    "description": "API para el sistema Planilla Rubik, encargado de la gestión de proyectos, colaboradores, tecnologias, vacantes, configuraciones, notificaciones y usuarios.",
+    "contact": {
+      "name": "Equipo de Desarrollo Planilla Rubik"
+    },
+    "license": {
+      "name": "MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3900/api",
+      "description": "Servidor de Desarrollo Local"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "accessTokenAuth": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-access-token",
+        "description": "Token de acceso (x-access-token) para rutas protegidas."
+      }
+    },
+    "schemas": {
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "fail",
+              "error"
+            ],
+            "example": "fail"
+          },
+          "message": {
+            "type": "string",
+            "description": "Mensaje descriptivo del error."
+          },
+          "details": {
+            "type": "string",
+            "description": "Detalles adicionales del error (opcional).",
+            "example": "El campo 'email' es requerido."
+          }
+        },
+        "required": [
+          "status",
+          "message"
+        ]
+      },
+      "SuccessMessageResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      },
+      "RoleEnum": {
+        "type": "string",
+        "enum": [
+          "user",
+          "admin",
+          "moderator"
+        ],
+        "description": "Rol del usuario en el sistema."
+      },
+      "UserBase": {
+        "type": "object",
+        "description": "Información base de un usuario, sin incluir contraseña.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "ObjectId",
+            "readOnly": true
+          },
+          "name": {
+            "type": "string",
+            "example": "Usuario Uno"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "uno@example.com"
+          },
+          "rol": {
+            "$ref": "#/components/schemas/RoleEnum"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "pending"
+            ],
+            "example": "active"
+          },
+          "profileImage": {
+            "type": "string",
+            "format": "url",
+            "nullable": true
+          },
+          "delete_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "readOnly": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        }
+      },
+      "User": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/UserBase"
+          }
+        ]
+      },
+      "UserListApiResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/User"
+        }
+      },
+      "UserRegisterPayload": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Nuevo Usuario Tres"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "tres@example.com"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "example": "password123"
+          },
+          "rol": {
+            "$ref": "#/components/schemas/RoleEnum"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "password",
+          "rol"
+        ]
+      },
+      "UserRegisterSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string",
+            "example": "Solicitud de registro enviada. Pendiente de autorización."
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        }
+      },
+      "LoginPayload": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "uno@example.com"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "example": "password_de_uno"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "UserLoginSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string",
+            "example": "Usuario logueado correctamente"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          },
+          "token": {
+            "type": "string",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          }
+        }
+      },
+      "UserUpdatePayload": {
+        "type": "object",
+        "description": "Campos actualizables para un usuario. Todos son opcionales.",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "rol": {
+            "$ref": "#/components/schemas/RoleEnum"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "pending"
+            ]
+          }
+        }
+      },
+      "UserUpdateSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string",
+            "example": "Usuario actualizado correctamente"
+          },
+          "user": {
+            "$ref": "#/components/schemas/User"
+          }
+        }
+      },
+      "UserDeleteSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string",
+            "example": "Usuario marcado como eliminado"
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "rol": {
+                "$ref": "#/components/schemas/RoleEnum"
+              },
+              "delete_at": {
+                "type": "string",
+                "format": "date-time"
+              }
+            }
+          }
+        }
+      },
+      "RequestPasswordResetPayload": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "uno@example.com"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "RequestPasswordResetResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Si tu correo está registrado y activo, recibirás un email con instrucciones."
+          }
+        }
+      },
+      "ResetPasswordPayload": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "uno@example.com"
+          },
+          "newPassword": {
+            "type": "string",
+            "format": "password"
+          },
+          "confirmPassword": {
+            "type": "string",
+            "format": "password"
+          }
+        },
+        "required": [
+          "email",
+          "newPassword",
+          "confirmPassword"
+        ]
+      },
+      "ResetPasswordResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Contraseña actualizada con éxito."
+          }
+        }
+      },
+      "ProfileImageUploadResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Imagen de perfil actualizada."
+          },
+          "imageUrl": {
+            "type": "string",
+            "format": "url",
+            "example": "/uploads/profiles/usuario@example.com-timestamp.jpg"
+          }
+        }
+      }, 
+      "CollaboratorProjectDetail": {
+        "type": "object",
+        "properties": {
+          "rol": {
+            "type": "string",
+            "example": "Facilitadora"
+          },
+          "Proyectos": {
+            "type": "string",
+            "example": "Proyecto Omega"
+          },
+          "tecnologias": {
+            "type": "string",
+            "example": "Scrum"
+          },
+          "horasAsignadas": {
+            "type": "integer",
+            "example": 40
+          }
+        }
+      },
+      "Collaborator": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "ObjectId",
+            "readOnly": true
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "ID numérico único del colaborador.",
+            "example": 501
+          },
+          "first_name": {
+            "type": "string",
+            "example": "Elena"
+          },
+          "last_name": {
+            "type": "string",
+            "example": "Silva"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "elena.silva@example.com"
+          },
+          "puesto_trabajo": {
+            "type": "string",
+            "example": "Scrum Master"
+          },
+          "estado": {
+            "type": "string",
+            "example": "Activo"
+          },
+          "seniority": {
+            "type": "string",
+            "example": "Senior"
+          },
+          "tecnologias": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "Agile",
+              "Jira"
+            ]
+          },
+          "Proyectos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CollaboratorProjectDetail"
+            }
+          },
+          "fin_contrato": {
+            "type": "string",
+            "format": "date",
+            "example": "2025-10-10"
+          },
+          "isDeleted": {
+            "type": "boolean",
+            "default": false,
+            "readOnly": true
+          },
+          "deleted_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "readOnly": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "id",
+          "first_name",
+          "last_name",
+          "email",
+          "puesto_trabajo",
+          "estado",
+          "seniority"
+        ]
+      },
+      "CollaboratorListApiResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Collaborator"
+        }
+      },
+      "CreateCollaboratorPayload": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 501
+          },
+          "first_name": {
+            "type": "string",
+            "example": "Elena"
+          },
+          "last_name": {
+            "type": "string",
+            "example": "Silva"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "elena.silva@example.com"
+          },
+          "puesto_trabajo": {
+            "type": "string",
+            "example": "Scrum Master"
+          },
+          "estado": {
+            "type": "string",
+            "example": "Activo"
+          },
+          "seniority": {
+            "type": "string",
+            "example": "Senior"
+          },
+          "tecnologias": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "example": [
+              "Agile",
+              "Jira"
+            ]
+          },
+          "Proyectos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CollaboratorProjectDetail"
+            }
+          },
+          "fin_contrato": {
+            "type": "string",
+            "format": "date",
+            "example": "2025-10-10"
+          }
+        },
+        "required": [
+          "id",
+          "first_name",
+          "last_name",
+          "email",
+          "puesto_trabajo",
+          "estado",
+          "seniority",
+          "tecnologias",
+          "Proyectos",
+          "fin_contrato"
+        ]
+      },
+      "CollaboratorCreationSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string",
+            "example": "Colaborador registrado correctamente."
+          },
+          "Colab": {
+            "$ref": "#/components/schemas/Collaborator"
+          }
+        }
+      },
+      "SingleCollaboratorResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "Colab": { 
+            "$ref": "#/components/schemas/Collaborator"
+          }
+        }
+      },
+      "UpdateCollaboratorPayload": {
+        "type": "object",
+        "description": "Campos actualizables para un colaborador. Todos opcionales.",
+        "properties": {
+          "first_name": {
+            "type": "string"
+          },
+          "last_name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "puesto_trabajo": {
+            "type": "string"
+          },
+          "estado": {
+            "type": "string",
+            "example": "Stand By"
+          },
+          "seniority": {
+            "type": "string",
+            "example": "Agile Coach"
+          },
+          "tecnologias": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "Proyectos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CollaboratorProjectDetail"
+            }
+          },
+          "fin_contrato": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          }
+        }
+      },
+      "CollaboratorUpdateSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string",
+            "example": "Colaborador actualizado correctamente."
+          },
+          "Colab": {
+            "$ref": "#/components/schemas/Collaborator"
+          }
+        }
+      },
+      "CollaboratorDeleteSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string",
+            "example": "Colaborador marcado como eliminado correctamente"
+          },
+          "id": {
+            "type": "integer",
+            "example": 501
+          },
+          "deleted_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "CollaboratorContractStatusItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "first_name": {
+            "type": "string"
+          },
+          "last_name": {
+            "type": "string"
+          },
+          "fin_contrato": {
+            "type": "string",
+            "format": "date"
+          },
+          "daysRemaining": {
+            "type": "integer",
+            "example": 20
+          },
+          "alertLevel": {
+            "type": "string",
+            "example": "warning"
+          },
+          "message": {
+            "type": "string",
+            "example": "Contrato vence en 20 día(s)"
+          }
+        }
+      },
+      "CollaboratorContractStatusResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "count": {
+            "type": "integer",
+            "example": 1
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CollaboratorContractStatusItem"
+            }
+          }
+        }
+      },
+      "ProjectContractStatus": {
+        "type": "object",
+        "properties": {
+          "daysRemaining": {
+            "type": "integer",
+            "example": 15
+          },
+          "alertLevel": {
+            "type": "string",
+            "example": "warning"
+          },
+          "message": {
+            "type": "string",
+            "example": "Proyecto vence en 15 día(s)"
+          }
+        }
+      },
+      "Project": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "ObjectId",
+            "readOnly": true
+          },
+          "taxonId": {
+            "type": "integer",
+            "description": "Identificador taxonómico o de negocio del proyecto.",
+            "example": 701
+          },
+          "name": {
+            "type": "string",
+            "description": "Nombre del proyecto.",
+            "example": "Proyecto KAPPA"
+          },
+          "client": {
+            "type": "string",
+            "example": "Cliente Existente"
+          },
+          "status": {
+            "type": "string",
+            "example": "Desarrollo"
+          },
+          "phase": {
+            "type": "string",
+            "example": "Ejecución"
+          },
+          "projectType": {
+            "type": "string",
+            "example": "Desarrollo Web"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "example": "2024-07-01"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "example": "2024-09-30"
+          },
+          "managerName": {
+            "type": "string",
+            "example": "Gerente KAPPA"
+          },
+          "contractStatus": {
+            "$ref": "#/components/schemas/ProjectContractStatus"
+          },
+          "isDeleted": {
+            "type": "boolean",
+            "default": false,
+            "readOnly": true
+          },
+          "deleted_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "readOnly": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "taxonId",
+          "name",
+          "client",
+          "status",
+          "phase",
+          "projectType",
+          "startDate",
+          "endDate"
+        ]
+      },
+      "ProjectListApiResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "count": {
+            "type": "integer",
+            "example": 1
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Project"
+            }
+          }
+        }
+      },
+      
+      "CreateProjectPayload": {
+        "type": "object",
+        "properties": {
+          "taxonId": {
+            "type": "integer",
+            "example": 702
+          },
+          "name": {
+            "type": "string",
+            "example": "Proyecto LAMBDA"
+          },
+          "client": {
+            "type": "string",
+            "example": "Cliente Nuevo"
+          },
+          "status": {
+            "type": "string",
+            "example": "Inicio"
+          },
+          "phase": {
+            "type": "string",
+            "example": "Definición"
+          },
+          "projectType": {
+            "type": "string",
+            "example": "Consultoría"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date",
+            "example": "2024-07-01"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date",
+            "example": "2024-09-30"
+          },
+           "managerName": {
+            "type": "string",
+            "example": "Gerente Lambda"
+          },
+          "managerId": {
+            "type": "ineteger",
+            "example": 34567
+          }
+        },
+        "required": [
+          "taxonId",
+          "name",
+          "client",
+          "status",
+          "phase",
+          "projectType",
+          "startDate",
+          "endDate",
+          "managerId",
+          "managerName"
+        ]
+      },
+      "ProjectCreationSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string",
+            "example": "Proyecto registrado exitosamente"
+          },
+          "project": {
+            "$ref": "#/components/schemas/Project"
+          }
+        }
+      },
+      "SingleProjectResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "$ref": "#/components/schemas/Project"
+          }
+        }
+      },
+      "UpdateProjectPayload": {
+        "type": "object",
+        "description": "Campos actualizables para un proyecto. Todos opcionales.",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "client": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "example": "Desarrollo"
+          },
+          "phase": {
+            "type": "string",
+            "example": "Ejecución"
+          },
+          "projectType": {
+            "type": "string"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "managerName": {
+            "type": "string"
+          }
+        }
+      },
+      "ProjectUpdateSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string",
+            "example": "Proyecto actualizado correctamente"
+          },
+          "project": {
+            "$ref": "#/components/schemas/Project"
+          }
+        }
+      },
+      "ProjectDeleteSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string",
+            "example": "Proyecto marcado como eliminado correctamente"
+          },
+          "taxonId": {
+            "type": "integer",
+            "example": 701
+          },
+          "deleted_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }, 
+      "Tecnology": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "ObjectId",
+            "readOnly": true
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "description": "ID numérico único de la tecnologia.",
+            "example": 123
+          },
+          "tecnologias": {
+            "type": "string",
+            "description": "Nombre de la tecnologia.",
+            "example": "Java"
+          },
+          "first_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "last_name": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "id",
+          "tecnologias"
+        ]
+      },
+      "TecnologyListApiResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Tecnology"
+        }
+      },
+      "CreateTecnologyPayload": {
+        "type": "object",
+        "properties": {
+          "tecnologias": {
+            "type": "string",
+            "example": "Python"
+          }
+        },
+        "required": [
+          "tecnologias"
+        ]
+      },
+      "TecnologyCreationSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string",
+            "example": "tecnologia registrada correctamente"
+          },
+          "tecno": {
+            "$ref": "#/components/schemas/Tecnology"
+          }
+        }
+      },
+      "UpdateTecnologyPayload": {
+        "type": "object",
+        "properties": {
+          "tecnologias": {
+            "type": "string",
+            "example": "Python Avanzado"
+          }
+        }
+      },
+      "TecnologyUpdateSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string",
+            "example": "tecnologia actualizada correctamente"
+          },
+          "tecno": {
+            "$ref": "#/components/schemas/Tecnology"
+          }
+        }
+      },
+      "TecnologyDeleteSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string",
+            "example": "tecnologia \"Python Avanzado\" (ID: 123) eliminada correctamente."
+          }
+        }
+      },
+      "Vacancie": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "ObjectId",
+            "readOnly": true
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 201
+          },
+          "manager_id": {
+            "type": "string",
+            "example": "m001"
+          },
+          "manager_name": {
+            "type": "string",
+            "example": "Manager Vac"
+          },
+          "taxonId": {
+            "type": "integer",
+            "example": 901
+          },
+          "Nombre": {
+            "type": "string",
+            "example": "Ingeniero de Software Sr."
+          },
+          "Vacante": {
+            "type": "string",
+            "example": "Software Engineer"
+          },
+          "Tiempo": {
+            "type": "integer",
+            "example": 100
+          },
+          "fecha_de_pedido": {
+            "type": "string",
+            "format": "date",
+            "example": "2024-01-01"
+          },
+          "fecha_de_inicio": {
+            "type": "string",
+            "format": "date",
+            "example": "2024-02-01"
+          },
+          "Seniority": {
+            "type": "string",
+            "example": "Senior"
+          },
+          "manager_visible_in_org_chart": {
+            "type": "boolean",
+            "default": true
+          },
+          "isDeleted": {
+            "type": "boolean",
+            "default": false,
+            "readOnly": true
+          },
+          "deleted_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "readOnly": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "id",
+          "manager_id",
+          "manager_name",
+          "taxonId",
+          "Nombre",
+          "Vacante",
+          "Tiempo",
+          "fecha_de_pedido",
+          "fecha_de_inicio",
+          "Seniority"
+        ]
+      },
+      "VacancieListApiResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Vacancie"
+        }
+      },
+      "CreateVacanciePayload": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Vacancie"
+          }
+        ]
+      },
+      "VacancieCreationSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string",
+            "example": "Vacante registrada correctamente"
+          },
+          "vacancie": {
+            "$ref": "#/components/schemas/Vacancie"
+          }
+        }
+      },
+      "SingleVacancieResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "$ref": "#/components/schemas/Vacancie"
+          }
+        }
+      },
+      "UpdateVacanciePayload": {
+        "type": "object",
+        "description": "Campos actualizables para una vacante. Todos opcionales.",
+        "properties": {
+          "manager_id": {
+            "type": "string"
+          },
+          "manager_name": {
+            "type": "string"
+          },
+          "taxonId": {
+            "type": "integer"
+          },
+          "Nombre": {
+            "type": "string",
+            "example": "Ingeniero de Software Principal"
+          },
+          "Vacante": {
+            "type": "string"
+          },
+          "Tiempo": {
+            "type": "integer",
+            "example": 80
+          },
+          "fecha_de_pedido": {
+            "type": "string",
+            "format": "date"
+          },
+          "fecha_de_inicio": {
+            "type": "string",
+            "format": "date"
+          },
+          "Seniority": {
+            "type": "string"
+          },
+          "manager_visible_in_org_chart": {
+            "type": "boolean"
+          }
+        }
+      },
+      "VacancieUpdateSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string",
+            "example": "Vacante actualizada correctamente"
+          },
+          "vacancie": {
+            "$ref": "#/components/schemas/Vacancie"
+          }
+        }
+      },
+      "VacancieDeleteSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string",
+            "example": "Vacante marcada como eliminada correctamente"
+          },
+          "id": {
+            "type": "integer",
+            "example": 201
+          },
+          "deleted_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "ColumnConfig": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Identificador único del campo/columna.",
+            "example": "name"
+          },
+          "label": {
+            "type": "string",
+            "description": "Etiqueta a mostrar para la columna.",
+            "example": "Nombre"
+          },
+          "visible": {
+            "type": "boolean",
+            "description": "Si la columna es visible por defecto.",
+            "default": true
+          },
+          "order": {
+            "type": "integer",
+            "description": "Orden de la columna (opcional).",
+            "example": 0
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "visible"
+        ]
+      },
+      "TableConfigurationResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "section": {
+            "type": "string",
+            "example": "projects"
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ColumnConfig"
+            }
+          },
+          "message": {
+            "type": "string",
+            "example": "Columnas obtenidas correctamente para la sección: projects"
+          }
+        }
+      },
+      "UpdateColumnsPayload": {
+        "type": "object",
+        "properties": {
+          "tableType": {
+            "type": "string",
+            "description": "Nombre de la sección/tabla a configurar.",
+            "example": "users"
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ColumnConfig"
+            }
+          }
+        },
+        "required": [
+          "tableType",
+          "columns"
+        ]
+      },
+      "UpdateColumnsSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "section": {
+            "type": "string",
+            "example": "users"
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ColumnConfig"
+            }
+          },
+          "message": {
+            "type": "string",
+            "example": "Columnas actualizadas/creadas correctamente para la sección: users"
+          }
+        }
+      }, 
+      "Notification": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "ObjectId",
+            "readOnly": true
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "type": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "referenceId": {
+            "type": "string",
+            "format": "ObjectId"
+          },
+          "read": {
+            "type": "boolean",
+            "default": false
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "email",
+          "type",
+          "message"
+        ]
+      },
+      "NotificationCheckResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string"
+          },
+          "notificationsProcessed": {
+            "type": "integer",
+            "example": 0
+          }
+        }
+      },
+      "NotificationListResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "count": {
+            "type": "integer",
+            "example": 0
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Notification"
+            }
+          }
+        }
+      },
+      "MarkNotificationReadPayload": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "notificationId": {
+            "type": "string",
+            "format": "ObjectId"
+          }
+        },
+        "required": [
+          "email",
+          "notificationId"
+        ]
+      },
+      "NotificationMarkSingleReadResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string",
+            "example": "Notificación marcada como leída."
+          },
+          "modified": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MarkAllNotificationsReadPayload": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "NotificationMarkAllReadResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string"
+          },
+          "modifiedCount": {
+            "type": "integer",
+            "example": 0
+          }
+        }
+      },
+      "InfoCollaborator": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "ObjectId",
+            "readOnly": true
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64",
+            "example": 601
+          },
+          "first_name": {
+            "type": "string",
+            "example": "Info Uno"
+          },
+          "last_name": {
+            "type": "string",
+            "example": "Detalle"
+          },
+          "Proyectos": {
+            "type": "string",
+            "example": "Proyecto Info A"
+          },
+          "tecnologias": {
+            "type": "string",
+            "example": "Info Tech X"
+          },
+          "horasAsignadas": {
+            "type": "integer",
+            "example": 10
+          },
+          "fin_contrato": {
+            "type": "string",
+            "format": "date",
+            "example": "2024-10-31"
+          },
+          "isDeleted": {
+            "type": "boolean",
+            "default": false,
+            "readOnly": true
+          },
+          "deleted_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true,
+            "readOnly": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        }
+      },
+      "InfoCollaboratorListApiResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/InfoCollaborator"
+        }
+      },
+      "CreateInfoCollaboratorPayload": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "example": 601
+          },
+          "first_name": {
+            "type": "string",
+            "example": "Info Uno"
+          },
+          "last_name": {
+            "type": "string",
+            "example": "Detalle"
+          },
+          "Proyectos": {
+            "type": "string",
+            "example": "Proyecto Info A"
+          },
+          "tecnologias": {
+            "type": "string",
+            "example": "Info Tech X"
+          },
+          "horasAsignadas": {
+            "type": "integer",
+            "example": 10
+          },
+          "fin_contrato": {
+            "type": "string",
+            "format": "date",
+            "example": "2024-10-31"
+          }
+        },
+        "required": [
+          "id",
+          "first_name",
+          "last_name",
+          "Proyectos",
+          "tecnologias",
+          "horasAsignadas",
+          "fin_contrato"
+        ]
+      },
+      "InfoCollaboratorCreationSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string",
+            "example": "Información de colaborador registrada correctamente."
+          },
+          "infocola": {
+            "$ref": "#/components/schemas/InfoCollaborator"
+          }
+        }
+      },
+      "SingleInfoCollaboratorResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "data": {
+            "$ref": "#/components/schemas/InfoCollaborator"
+          }
+        }
+      },
+      "UpdateInfoCollaboratorPayload": {
+        "type": "object",
+        "description": "Campos actualizables para InfoCollaborator. Todos opcionales.",
+        "properties": {
+          "first_name": {
+            "type": "string"
+          },
+          "last_name": {
+            "type": "string"
+          },
+          "Proyectos": {
+            "type": "string",
+            "example": "Proyecto Info B Actualizado"
+          },
+          "tecnologias": {
+            "type": "string"
+          },
+          "horasAsignadas": {
+            "type": "integer",
+            "example": 20
+          },
+          "fin_contrato": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          }
+        }
+      },
+      "InfoCollaboratorUpdateSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string",
+            "example": "Información de colaborador actualizada correctamente."
+          },
+          "infocola": {
+            "$ref": "#/components/schemas/InfoCollaborator"
+          }
+        }
+      },
+      "InfoCollaboratorDeleteSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string",
+            "example": "Información de colaborador marcada como eliminada correctamente"
+          },
+          "id": {
+            "type": "integer",
+            "example": 601
+          },
+          "deleted_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "InfoCollaboratorContractStatusResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InfoCollaborator"
+            }
+          }
+        }
+      },
+      "FieldTypeEnum": {
+        "type": "string",
+        "enum": [
+          "string",
+          "number",
+          "date",
+          "boolean",
+          "select",
+          "textarea"
+        ],
+        "description": "Tipo de dato del campo."
+      },
+      "BasicFieldDef": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "ObjectId",
+            "readOnly": true
+          },
+          "key": {
+            "type": "string",
+            "description": "Identificador único del campo (usado programáticamente).",
+            "example": "paisOrigen"
+          },
+          "label": {
+            "type": "string",
+            "description": "Etiqueta a mostrar para el campo en la UI.",
+            "example": "País de Origen"
+          },
+          "type": {
+            "type": "string",
+            "example": "string"
+          },
+          "order": {
+            "type": "integer",
+            "example": 10
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "type"
+        ]
+      },
+      "BasicFieldDefListApiResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/BasicFieldDef"
+        }
+      },
+      "CreateBasicFieldPayload": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "example": "paisOrigen"
+          },
+          "label": {
+            "type": "string",
+            "example": "País de Origen"
+          },
+          "type": {
+            "type": "string",
+            "example": "string"
+          },
+          "order": {
+            "type": "integer",
+            "example": 10
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "type"
+        ]
+      },
+      "BasicFieldCreationSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string",
+            "example": "Definición de campo básico creada exitosamente."
+          },
+          "data": {
+            "$ref": "#/components/schemas/BasicFieldDef"
+          }
+        }
+      },
+      "SingleBasicFieldResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/BasicFieldDef"
+          }
+        }
+      },
+      "UpdateBasicFieldPayload": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "example": "País de Nacimiento"
+          },
+          "type": {
+            "type": "string"
+          },
+          "order": {
+            "type": "integer",
+            "example": 11
+          }
+        }
+      },
+      "BasicFieldUpdateSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string",
+            "example": "Definición de campo básico actualizada exitosamente."
+          },
+          "data": {
+            "$ref": "#/components/schemas/BasicFieldDef"
+          }
+        }
+      },
+      "BasicFieldDeleteSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "success"
+          },
+          "message": {
+            "type": "string",
+            "example": "Definición de campo básico con key 'paisOrigen' eliminada correctamente."
+          }
+        }
+      }, 
+      "ExtraFieldDef": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "ObjectId",
+            "readOnly": true
+          },
+          "key": {
+            "type": "string",
+            "description": "Identificador único del campo extra.",
+            "example": "tallaUniforme"
+          },
+          "label": {
+            "type": "string",
+            "description": "Etiqueta a mostrar para el campo extra.",
+            "example": "Talla de Uniforme"
+          },
+          "type": {
+            "$ref": "#/components/schemas/FieldTypeEnum"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true,
+            "example": [
+              "S",
+              "M",
+              "L",
+              "XL"
+            ]
+          },
+          "order": {
+            "type": "integer",
+            "example": 5
+          },
+          "entityType": {
+            "type": "string",
+            "example": "Personnel"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "type"
+        ]
+      },
+      "ExtraFieldDefListApiResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ExtraFieldDef"
+        }
+      },
+      "CreateExtraFieldPayload": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "example": "tallaUniforme"
+          },
+          "label": {
+            "type": "string",
+            "example": "Talla de Uniforme"
+          },
+          "type": {
+            "$ref": "#/components/schemas/FieldTypeEnum"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true,
+            "example": [
+              "S",
+              "M",
+              "L",
+              "XL"
+            ]
+          },
+          "order": {
+            "type": "integer",
+            "example": 5
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "type"
+        ]
+      },
+      "ExtraFieldCreationSuccessResponse": {
+        "$ref": "#/components/schemas/ExtraFieldDef"
+      },
+      "SingleExtraFieldResponse": {
+        "$ref": "#/components/schemas/ExtraFieldDef"
+      },
+      "UpdateExtraFieldPayload": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "example": "Talla de Uniforme (Actualizado)"
+          },
+          "type": {
+            "$ref": "#/components/schemas/FieldTypeEnum"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "nullable": true,
+            "example": [
+              "XS",
+              "S",
+              "M",
+              "L",
+              "XL",
+              "XXL"
+            ]
+          }
+        }
+      },
+      "ExtraFieldUpdateSuccessResponse": {
+        "$ref": "#/components/schemas/ExtraFieldDef"
+      },
+      "ExtraFieldDeleteSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Definición de campo extra 'Talla de Uniforme (Actualizado)' eliminada correctamente."
+          },
+          "deletedCount": {
+            "type": "integer",
+            "example": 1
+          }
+        }
+      },
+      "ExtraFieldConflictResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "example": "fail"
+          },
+          "message": {
+            "type": "string",
+            "example": "El campo extra 'Talla de Uniforme' (key: tallaUniforme) está actualmente en uso por personal y no se puede eliminar."
+          }
+        }
+      },
+      "Personnel": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "ObjectId",
+            "readOnly": true
+          },
+          "first_name": {
+            "type": "string",
+            "example": "Juan"
+          },
+          "last_name": {
+            "type": "string",
+            "example": "Perez"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "juan.perez.staff@example.com"
+          },
+          "idExterno": {
+            "type": "integer",
+            "nullable": true,
+            "example": 778899
+          },
+          "birthDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "example": "1990-05-15"
+          },
+          "extraData": {
+            "type": "object",
+            "description": "Pares clave-valor para campos extras definidos. La estructura depende de los ExtraFieldDef.",
+            "additionalProperties": true,
+            "example": {
+              "tallaUniforme": "L",
+              "licenciaConducir": "Clase B Vigente"
+            }
+          },
+          "companyId": {
+            "type": "integer",
+            "nullable": true,
+            "example": 1
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "first_name",
+          "last_name",
+          "email"
+        ]
+      },
+      "PersonnelListApiResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/Personnel"
+        }
+      },
+      "CreatePersonnelPayload": {
+        "type": "object",
+        "properties": {
+          "first_name": {
+            "type": "string",
+            "example": "Juan"
+          },
+          "last_name": {
+            "type": "string",
+            "example": "Perez"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "juan.perez.staff@example.com"
+          },
+          "idExterno": {
+            "type": "integer",
+            "nullable": true,
+            "example": 778899
+          },
+          "birthDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true,
+            "example": "1990-05-15"
+          },
+          "extraData": {
+            "type": "object",
+            "additionalProperties": true,
+            "example": {
+              "tallaUniforme": "L",
+              "licenciaConducir": "Clase B Vigente"
+            }
+          },
+          "companyId": {
+            "type": "integer",
+            "nullable": true,
+            "example": 1
+          }
+        },
+        "required": [
+          "first_name",
+          "last_name",
+          "email"
+        ]
+      },
+      "SinglePersonnelResponse": {
+        "$ref": "#/components/schemas/Personnel"
+      },
+      "UpdatePersonnelPayload": {
+        "type": "object",
+        "description": "Campos actualizables para Personnel. Todos opcionales.",
+        "properties": {
+          "first_name": {
+            "type": "string"
+          },
+          "last_name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "jperez.staff@example.com"
+          },
+          "idExterno": {
+            "type": "integer",
+            "nullable": true
+          },
+          "birthDate": {
+            "type": "string",
+            "format": "date",
+            "nullable": true
+          },
+          "extraData": {
+            "type": "object",
+            "additionalProperties": true,
+            "example": {
+              "tallaUniforme": "XL",
+              "contactoEmergencia": "Maria Perez - 555-1234"
+            }
+          },
+          "companyId": {
+            "type": "integer",
+            "nullable": true
+          }
+        }
+      },
+      "PersonnelDeleteSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "Personal con ID 'ID_MONGO_DEL_PERSONAL' eliminado correctamente."
+          }
+        }
+      },
+      "StateProject": {
+        "type": "object",
+        "description": "Representa un estado posible para un proyecto.",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "format": "ObjectId",
+            "readOnly": true
+          },
+          "id": {
+            "type": "string",
+            "description": "ID único definido para el estado del proyecto (no el _id de mongo).",
+            "example": "IN_PROGRESS_STATE_ID"
+          },
+          "status": {
+            "type": "string",
+            "description": "Nombre o descripción del estado.",
+            "default": "",
+            "example": "En Progreso"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "StateProjectListApiResponse": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/StateProject"
+        }
+      }
+    },
+    "responses": {
+      "InternalServerError": {
+        "description": "Error interno del servidor.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "serverError": {
+                "value": {
+                  "status": "error",
+                  "message": "Ocurrió un error inesperado en el servidor."
+                }
+              }
+            }
+          }
+        }
+      },
+      "UnauthorizedError": {
+        "description": "No autorizado. Token faltante, inválido o expirado.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "noToken": {
+                "value": {
+                  "status": "fail",
+                  "message": "No se proporcionó token de acceso."
+                }
+              },
+              "invalidToken": {
+                "value": {
+                  "status": "fail",
+                  "message": "Token inválido o expirado."
+                }
+              }
+            }
+          }
+        }
+      },
+      "ForbiddenError": {
+        "description": "Prohibido. El usuario autenticado no tiene permisos para realizar esta acción.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "insufficientPermissions": {
+                "value": {
+                  "status": "fail",
+                  "message": "No tienes permisos suficientes para realizar esta acción."
+                }
+              }
+            }
+          }
+        }
+      },
+      "NotFoundError": {
+        "description": "Recurso no encontrado.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "resourceNotFound": {
+                "value": {
+                  "status": "fail",
+                  "message": "El recurso solicitado no fue encontrado."
+                }
+              }
+            }
+          }
+        }
+      },
+      "BadRequestError": {
+        "description": "Solicitud incorrecta o datos de entrada inválidos.",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/ErrorResponse"
+            },
+            "examples": {
+              "validationError": {
+                "value": {
+                  "status": "fail",
+                  "message": "Error de validación.",
+                  "details": "El campo 'nombre' no puede estar vacío."
+                }
+              }
+            }
+          }
+        }
+      },
+      "SuccessDelete": {
+        "description": "Recurso eliminado exitosamente."
+      }
+    }
+  },
+  "paths": {
+    "/user/register": {
+      "post": {
+        "tags": [
+          "User Auth & Management"
+        ],
+        "summary": "Registrar un nuevo usuario",
+        "description": "Crea una nueva cuenta de usuario en el sistema.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserRegisterPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Usuario registrado exitosamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserRegisterSuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/user/login": {
+      "post": {
+        "tags": [
+          "User Auth & Management"
+        ],
+        "summary": "Iniciar sesión de usuario",
+        "description": "Autentica a un usuario con email y contraseña y devuelve un token de acceso.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Autenticación exitosa.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserLoginSuccessResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/UnauthorizedError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/user/authorize/{token}/{action}": {
+      "get": {
+        "tags": [
+          "User Auth & Management"
+        ],
+        "summary": "Procesar activación o rechazo de cuenta de usuario",
+        "description": "Usado generalmente desde un enlace enviado por email para activar o rechazar una cuenta pendiente.",
+        "parameters": [
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "description": "Token de autorización enviado al usuario.",
+            "schema": {
+              "type": "string",
+              "example": "longSecureTokenString12345"
+            }
+          },
+          {
+            "name": "action",
+            "in": "path",
+            "required": true,
+            "description": "Acción a realizar.",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "approve",
+                "reject"
+              ],
+              "example": "approve"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Acción procesada exitosamente. (Redirige o muestra mensaje HTML).",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string",
+                  "example": "<h1>Tu cuenta ha sido activada.</h1>"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Token inválido o expirado, o acción no válida.",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string",
+                  "example": "<h1>Error: El enlace no es válido o ha expirado.</h1>"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/user/update/{email}": {
+      "put": {
+        "tags": [
+          "User Auth & Management"
+        ],
+        "summary": "Actualizar información de un usuario",
+        "description": "Permite actualizar campos de un usuario existente, identificado por su email.",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "description": "Email del usuario a actualizar.",
+            "schema": {
+              "type": "string",
+              "format": "email",
+              "example": "ana.gomez@example.com"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdatePayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Usuario actualizado exitosamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserUpdateSuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/user/delete/{email}": {
+      "post": {
+        "tags": [
+          "User Auth & Management"
+        ],
+        "summary": "Marcar un usuario como eliminado (soft delete)",
+        "description": "Cambia el estado de un usuario para marcarlo como eliminado.",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "description": "Email del usuario a eliminar.",
+            "schema": {
+              "type": "string",
+              "format": "email",
+              "example": "usuario.a.eliminar@example.com"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Usuario marcado como eliminado exitosamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDeleteSuccessResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/user/auth/editpws": {
+      "post": {
+        "tags": [
+          "User Auth & Management"
+        ],
+        "summary": "Solicitar reseteo de contraseña",
+        "description": "Inicia el flujo para resetear la contraseña de un usuario.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RequestPasswordResetPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Solicitud de reseteo procesada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RequestPasswordResetResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/user/auth/resetpassword": {
+      "post": {
+        "tags": [
+          "User Auth & Management"
+        ],
+        "summary": "Establecer nueva contraseña después de recuperación",
+        "description": "Permite al usuario establecer una nueva contraseña.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ResetPasswordPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Contraseña actualizada exitosamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResetPasswordResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/user/profile/{userEmail}/image": {
+      "post": {
+        "tags": [
+          "User Auth & Management"
+        ],
+        "summary": "Subir imagen de perfil de usuario",
+        "description": "Permite subir o reemplazar la imagen de perfil de un usuario.",
+        "parameters": [
+          {
+            "name": "userEmail",
+            "in": "path",
+            "required": true,
+            "description": "Email del usuario.",
+            "schema": {
+              "type": "string",
+              "format": "email",
+              "example": "usuario@example.com"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "profileImageField": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "El archivo de imagen a subir."
+                  }
+                },
+                "required": [
+                  "profileImageField"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Imagen subida y guardada exitosamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileImageUploadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/user/prueba": {
+      "get": {
+        "tags": [
+          "User Auth & Management"
+        ],
+        "summary": "Obtener lista de todos los usuarios (prueba/admin)",
+        "description": "Devuelve una lista de todos los usuarios registrados.",
+        "responses": {
+          "200": {
+            "description": "Lista de usuarios obtenida exitosamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserListApiResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/collaborator/": {
+      "get": {
+        "tags": [
+          "Collaborator"
+        ],
+        "summary": "Obtener lista de colaboradores activos",
+        "description": "Devuelve una lista de colaboradores. Permite búsqueda opcional. (Ruta base / para listar, antes /colaborador)",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "description": "Término de búsqueda para filtrar.",
+            "schema": {
+              "type": "string",
+              "example": "Juan React"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de colaboradores obtenida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollaboratorListApiResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Collaborator"
+        ],
+        "summary": "Crear un nuevo colaborador",
+        "description": "Registra un nuevo colaborador en el sistema. (Ruta base / para crear, antes /register)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCollaboratorPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Colaborador creado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollaboratorCreationSuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/collaborator/{id}": {
+      "get": {
+        "tags": [
+          "Collaborator"
+        ],
+        "summary": "Obtener detalles de un colaborador específico",
+        "description": "Devuelve información de un colaborador por ID numérico. (Ruta /:id, antes /getone/:id)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID numérico del colaborador.",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 101
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalles del colaborador.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleCollaboratorResponse" 
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Collaborator"
+        ],
+        "summary": "Actualizar información de un colaborador",
+        "description": "Modifica un colaborador por ID numérico. (Ruta /:id, antes /editar/:id)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID numérico del colaborador.",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 101
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCollaboratorPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Colaborador actualizado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollaboratorUpdateSuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Collaborator"
+        ],
+        "summary": "Marcar un colaborador como eliminado",
+        "description": "Soft delete de un colaborador por ID numérico. (Ruta /:id, antes POST /eliminar/:id)",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID numérico del colaborador.",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 101
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Colaborador marcado como eliminado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollaboratorDeleteSuccessResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/collaborator/contracts/expirations": {
+      "get": {
+        "tags": [
+          "Collaborator"
+        ],
+        "summary": "Obtener colaboradores con contratos por vencer",
+        "description": "Lista de colaboradores con contratos próximos a vencer o vencidos. (Ruta /contracts/expirations, antes /check-contracts)",
+        "responses": {
+          "200": {
+            "description": "Lista de colaboradores con alertas de contrato.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollaboratorContractStatusResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/projects/": {
+      "get": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Obtener lista de proyectos",
+        "description": "Devuelve una lista de proyectos. Permite búsqueda.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "description": "Término de búsqueda.",
+            "schema": {
+              "type": "string",
+              "example": "E-learning"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de proyectos.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectListApiResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/projects/register": {
+      "post": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Crear un nuevo proyecto",
+        "description": "Registra un nuevo proyecto.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProjectPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Proyecto creado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectCreationSuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/projects/{taxonId}": {
+      "get": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Obtener detalles de un proyecto",
+        "description": "Devuelve información de un proyecto por taxonId.",
+        "parameters": [
+          {
+            "name": "taxonId",
+            "in": "path",
+            "required": true,
+            "description": "ID taxonómico del proyecto.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalles del proyecto.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleProjectResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/projects/update/{taxonId}": {
+      "put": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Actualizar información de un proyecto",
+        "description": "Modifica un proyecto por taxonId.",
+        "parameters": [
+          {
+            "name": "taxonId",
+            "in": "path",
+            "required": true,
+            "description": "ID taxonómico del proyecto.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProjectPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Proyecto actualizado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectUpdateSuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/projects/delete/{taxonId}": {
+      "delete": {
+        "tags": [
+          "Projects"
+        ],
+        "summary": "Marcar un proyecto como eliminado",
+        "description": "Soft delete de un proyecto por taxonId.",
+        "parameters": [
+          {
+            "name": "taxonId",
+            "in": "path",
+            "required": true,
+            "description": "ID taxonómico del proyecto.",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Proyecto marcado como eliminado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDeleteSuccessResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    
+    "/projects/all": { 
+      "get": {
+        "tags": [
+          "Projects" 
+        ],
+        "summary": "Obtener todos los proyectos existentes",
+        "description": "Devuelve una lista de todos los proyectos registrados en la base de datos, independientemente de su estado de eliminación (soft delete) o actividad.",
+       
+        "responses": {
+          "200": {
+            "description": "Lista de todos los proyectos obtenida exitosamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  
+                  "$ref": "#/components/schemas/ProjectListApiResponse"
+                },
+                "examples": {
+                  "ejemploConProyectos": {
+                    "summary": "Respuesta con múltiples proyectos",
+                    "value": {
+                      "status": "success",
+                      "count": 2,
+                      "data": [
+                        {
+                          "_id": "60d0fe4f5311236168a109ca",
+                          "taxonId": 701,
+                          "name": "Proyecto KAPPA",
+                          "client": "Cliente Existente",
+                          "status": "Desarrollo",
+                          "phase": "Ejecución",
+                          "projectType": "Desarrollo Web",
+                          "startDate": "2024-07-01",
+                          "endDate": "2024-09-30",
+                          "managerName": "Gerente KAPPA",
+                          "isDeleted": false,
+                          "createdAt": "2024-01-01T10:00:00Z",
+                          "updatedAt": "2024-01-05T12:30:00Z"
+                        },
+                        {
+                          "_id": "60d0fe4f5311236168a109cb",
+                          "taxonId": 702,
+                          "name": "Proyecto LAMBDA",
+                          "client": "Cliente Nuevo",
+                          "status": "Inicio",
+                          "phase": "Definición",
+                          "projectType": "Consultoría",
+                          "startDate": "2024-07-01",
+                          "endDate": "2024-09-30",
+                          "managerName": "Gerente Lambda",
+                          "isDeleted": true,
+                          "deleted_at": "2024-03-15T10:00:00Z",
+                          "createdAt": "2024-02-01T10:00:00Z",
+                          "updatedAt": "2024-03-15T10:00:00Z"
+                        }
+                      ]
+                    }
+                  },
+                  "ejemploSinProyectos": {
+                    "summary": "Respuesta cuando no hay proyectos (aunque tu servicio lanza 404)",
+                    "value": {
+                      "status": "success", 
+                      "count": 0,
+                      "data": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": { 
+            "$ref": "#/components/responses/NotFoundError",
+            "description": "No se encontraron proyectos en la base de datos."
+          },
+          
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    
+    "/technology/tecnology": {
+      "get": {
+        "tags": [
+          "Technology"
+        ],
+        "summary": "Obtener lista de todas las tecnologias",
+        "description": "Devuelve una lista de tecnologias.",
+        "responses": {
+          "200": {
+            "description": "Lista de tecnologias.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TecnologyListApiResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/technology/register": {
+      "post": {
+        "tags": [
+          "Technology"
+        ],
+        "summary": "Crear una nueva tecnologia",
+        "description": "Registra una nueva tecnologia.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateTecnologyPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "tecnologia creada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TecnologyCreationSuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/technology/{id}": {
+      "get": {
+        "tags": [
+          "Technology"
+        ],
+        "summary": "Obtener detalles de una tecnologia",
+        "description": "Devuelve información de una tecnologia por ID numérico.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID numérico de la tecnologia.",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 123
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalles de la tecnologia.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Tecnology"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Technology"
+        ],
+        "summary": "Actualizar información de una tecnologia",
+        "description": "Modifica una tecnologia por ID numérico.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID numérico de la tecnologia.",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 123
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTecnologyPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "tecnologia actualizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TecnologyUpdateSuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Technology"
+        ],
+        "summary": "Borrar una tecnologia",
+        "description": "Elimina una tecnologia por ID numérico.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID numérico de la tecnologia.",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 123
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "tecnologia eliminada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TecnologyDeleteSuccessResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/vacancie/": {
+      "get": {
+        "tags": [
+          "Vacancie"
+        ],
+        "summary": "Obtener lista de vacantes activas",
+        "description": "Devuelve una lista de vacantes. Permite búsqueda.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "description": "Término de búsqueda.",
+            "schema": {
+              "type": "string",
+              "example": "Fullstack Senior"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de vacantes.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VacancieListApiResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Vacancie"
+        ],
+        "summary": "Crear una nueva vacante",
+        "description": "Registra una nueva vacante.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateVacanciePayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Vacante creada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VacancieCreationSuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/vacancie/{id}": {
+      "get": {
+        "tags": [
+          "Vacancie"
+        ],
+        "summary": "Obtener detalles de una vacante",
+        "description": "Devuelve información de una vacante por ID numérico.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID numérico de la vacante.",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 201
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalles de la vacante.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleVacancieResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Vacancie"
+        ],
+        "summary": "Actualizar información de una vacante",
+        "description": "Modifica una vacante por ID numérico.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID numérico de la vacante.",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 201
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateVacanciePayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Vacante actualizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VacancieUpdateSuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Vacancie"
+        ],
+        "summary": "Marcar una vacante como eliminada",
+        "description": "Soft delete de una vacante por ID numérico.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "ID numérico de la vacante.",
+            "schema": {
+              "type": "integer",
+              "format": "int64",
+              "example": 201
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Vacante marcada como eliminada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VacancieDeleteSuccessResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/configuration/columns/{section}": {
+      "get": {
+        "tags": [
+          "Configuration"
+        ],
+        "summary": "Obtener configuración de columnas para una sección",
+        "description": "Devuelve configuración de columnas para una tabla/sección.",
+        "parameters": [
+          {
+            "name": "section",
+            "in": "path",
+            "required": true,
+            "description": "Nombre de la sección/tabla.",
+            "schema": {
+              "type": "string",
+              "example": "projects"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Configuración de columnas obtenida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TableConfigurationResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Configuración no encontrada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/configuration/updateColumns": {
+      "put": {
+        "tags": [
+          "Configuration"
+        ],
+        "summary": "Actualizar o crear configuración de columnas",
+        "description": "Guarda/modifica configuración de columnas para una sección.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateColumnsPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Configuración de columnas actualizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateColumnsSuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/notification/checkContracts": {
+      "post": {
+        "tags": [
+          "Notification"
+        ],
+        "summary": "Activar revisión de vencimientos de contratos",
+        "description": "Dispara proceso de revisión de contratos y genera notificaciones.",
+        "responses": {
+          "200": {
+            "description": "Proceso de revisión de contratos iniciado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationCheckResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/notification/checkProjects": {
+      "post": {
+        "tags": [
+          "Notification"
+        ],
+        "summary": "Activar revisión de vencimientos de proyectos",
+        "description": "Dispara proceso de revisión de proyectos y genera notificaciones.",
+        "responses": {
+          "200": {
+            "description": "Proceso de revisión de proyectos iniciado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationCheckResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/notification/user/{email}": {
+      "get": {
+        "tags": [
+          "Notification"
+        ],
+        "summary": "Obtener notificaciones no leídas de un usuario",
+        "description": "Devuelve notificaciones no leídas por email de usuario.",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "path",
+            "required": true,
+            "description": "Email del usuario.",
+            "schema": {
+              "type": "string",
+              "format": "email",
+              "example": "usuario@example.com"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de notificaciones no leídas.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationListResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Usuario no encontrado o sin notificaciones no leídas.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationListResponse"
+                },
+                "example": {
+                  "status": "success",
+                  "count": 0,
+                  "data": []
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/notification/read/single": {
+      "put": {
+        "tags": [
+          "Notification"
+        ],
+        "summary": "Marcar una notificación específica como leída",
+        "description": "Cambia estado 'read' a true para una notificación.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkNotificationReadPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Notificación marcada como leída.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationMarkSingleReadResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "404": {
+            "description": "Notificación no encontrada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/notification/read/all": {
+      "put": {
+        "tags": [
+          "Notification"
+        ],
+        "summary": "Marcar todas las notificaciones de un usuario como leídas",
+        "description": "Cambia estado 'read' a true para todas las notificaciones de un usuario.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarkAllNotificationsReadPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Todas las notificaciones marcadas como leídas.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationMarkAllReadResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/notification/all": {
+      "get": {
+        "tags": [
+          "Notification"
+        ],
+        "summary": "Obtener todas las notificaciones (Admin)",
+        "description": "Devuelve todas las notificaciones. Requiere permisos de admin.",
+        "responses": {
+          "200": {
+            "description": "Lista de todas las notificaciones.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationListResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/notification/manager": {
+      "get": {
+        "tags": [
+          "Notification"
+        ],
+        "summary": "Obtener notificaciones por email de manager",
+        "description": "Devuelve notificaciones filtradas por email de manager.",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "required": true,
+            "description": "Email del manager.",
+            "schema": {
+              "type": "string",
+              "format": "email",
+              "example": "manager@example.com"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de notificaciones para el manager.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/notification/status": {
+      "get": {
+        "tags": [
+          "Notification"
+        ],
+        "summary": "Obtener notificaciones por email y estado de lectura",
+        "description": "Devuelve notificaciones filtradas por email y estado de lectura.",
+        "parameters": [
+          {
+            "name": "email",
+            "in": "query",
+            "required": true,
+            "description": "Email del usuario.",
+            "schema": {
+              "type": "string",
+              "format": "email",
+              "example": "usuario@example.com"
+            }
+          },
+          {
+            "name": "read",
+            "in": "query",
+            "required": true,
+            "description": "Estado de lectura (true/false).",
+            "schema": {
+              "type": "boolean",
+              "example": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de notificaciones filtradas.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationListResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/basic-fields/": {
+      "get": {
+        "tags": [
+          "BasicFields"
+        ],
+        "summary": "Obtener lista de todos los campos básicos",
+        "description": "Devuelve lista de definiciones de campos básicos.",
+        "responses": {
+          "200": {
+            "description": "Lista de campos básicos obtenida.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BasicFieldDefListApiResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "BasicFields"
+        ],
+        "summary": "Crear un nuevo campo básico",
+        "description": "Registra una nueva definición de campo básico.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateBasicFieldPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Campo básico creado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BasicFieldCreationSuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/basic-fields/{key}": {
+      "get": {
+        "tags": [
+          "BasicFields"
+        ],
+        "summary": "Obtener detalles de un campo básico",
+        "description": "Devuelve info de una definición de campo básico por 'key'.",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "description": "Key del campo básico.",
+            "schema": {
+              "type": "string",
+              "example": "department"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalles del campo básico.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleBasicFieldResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "BasicFields"
+        ],
+        "summary": "Actualizar un campo básico",
+        "description": "Modifica una definición de campo básico por 'key'.",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "description": "Key del campo básico.",
+            "schema": {
+              "type": "string",
+              "example": "department"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBasicFieldPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Campo básico actualizado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BasicFieldUpdateSuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "BasicFields"
+        ],
+        "summary": "Borrar un campo básico",
+        "description": "Elimina una definición de campo básico por 'key'.",
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "description": "Key del campo básico.",
+            "schema": {
+              "type": "string",
+              "example": "department"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Campo básico eliminado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BasicFieldDeleteSuccessResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/extra-fields/": {
+      "get": {
+        "tags": [
+          "ExtraFields"
+        ],
+        "summary": "Obtener lista de todas las definiciones de campos extras",
+        "description": "Devuelve lista de definiciones de campos personalizables.",
+        "responses": {
+          "200": {
+            "description": "Lista de definiciones de campos extras.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtraFieldDefListApiResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "ExtraFields"
+        ],
+        "summary": "Crear una nueva definición de campo extra",
+        "description": "Registra una nueva definición para un campo personalizable.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateExtraFieldPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Definición de campo extra creada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtraFieldCreationSuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/extra-fields/{id}": {
+      "get": {
+        "tags": [
+          "ExtraFields"
+        ],
+        "summary": "Obtener detalles de una definición de campo extra",
+        "description": "Devuelve info de una definición de campo extra por _id.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "_id de MongoDB de la definición.",
+            "schema": {
+              "type": "string",
+              "format": "ObjectId",
+              "example": "60d2c7f95119e879f49b3f8e"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalles de la definición de campo extra.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SingleExtraFieldResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ExtraFields"
+        ],
+        "summary": "Actualizar una definición de campo extra",
+        "description": "Modifica una definición de campo extra por _id.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "_id de MongoDB de la definición.",
+            "schema": {
+              "type": "string",
+              "format": "ObjectId",
+              "example": "60d2c7f95119e879f49b3f8e"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateExtraFieldPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Definición de campo extra actualizada.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExtraFieldUpdateSuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ExtraFields"
+        ],
+        "summary": "Borrar una definición de campo extra",
+        "description": "Elimina una definición de campo extra por _id.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "_id de MongoDB de la definición.",
+            "schema": {
+              "type": "string",
+              "format": "ObjectId",
+              "example": "60d2c7f95119e879f49b3f8e"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+             "description": "Definición de campo eliminada (o mensaje de error si está en uso).",
+             "content": {
+               "application/json": {
+                 "oneOf": [
+                   { "$ref": "#/components/schemas/ExtraFieldDeleteSuccessResponse" },
+                   { "$ref": "#/components/schemas/ExtraFieldConflictResponse" }
+                 ]
+               }
+             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/personnel/": {
+      "get": {
+        "tags": [
+          "Personnel"
+        ],
+        "summary": "Obtener lista de todo el personal",
+        "description": "Devuelve lista de registros de personal.",
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "description": "Término de búsqueda.",
+            "schema": {
+              "type": "string",
+              "example": "Ledesma"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de personal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonnelListApiResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Personnel"
+        ],
+        "summary": "Crear un nuevo registro de personal",
+        "description": "Registra una nueva persona.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePersonnelPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registro de personal creado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SinglePersonnelResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/personnel/{id}": {
+      "get": {
+        "tags": [
+          "Personnel"
+        ],
+        "summary": "Obtener detalles de un registro de personal",
+        "description": "Devuelve info de un registro de personal por _id.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "_id de MongoDB del registro.",
+            "schema": {
+              "type": "string",
+              "format": "ObjectId",
+              "example": "60d2c7f95119e879f49b3f8f"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Detalles del registro de personal.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SinglePersonnelResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Personnel"
+        ],
+        "summary": "Actualizar un registro de personal",
+        "description": "Modifica un registro de personal por _id.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "_id de MongoDB del registro.",
+            "schema": {
+              "type": "string",
+              "format": "ObjectId",
+              "example": "60d2c7f95119e879f49b3f8f"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePersonnelPayload"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Registro de personal actualizado.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SinglePersonnelResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequestError"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Personnel"
+        ],
+        "summary": "Borrar un registro de personal",
+        "description": "Elimina un registro de personal por _id.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "description": "_id de MongoDB del registro.",
+            "schema": {
+              "type": "string",
+              "format": "ObjectId",
+              "example": "60d2c7f95119e879f49b3f8f"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+             "description": "Personal eliminado.",
+             "content": {
+               "application/json": {
+                 "schema": {
+                   "$ref": "#/components/schemas/PersonnelDeleteSuccessResponse"
+                 }
+               }
+             }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFoundError"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    },
+    "/stateprojects/": {
+      "get": {
+        "tags": [
+          "StateProjects"
+        ],
+        "summary": "Obtener todos los estados de proyecto",
+        "description": "Devuelve una lista de todos los estados definidos para los proyectos.",
+        "responses": {
+          "200": {
+            "description": "Lista de estados de proyecto obtenida exitosamente.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StateProjectListApiResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalServerError"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "User Auth & Management",
+      "description": "Operaciones relacionadas con la autenticación y gestión de usuarios."
+    },
+    {
+      "name": "Collaborator",
+      "description": "Gestión de colaboradores."
+    },
+    {
+      "name": "Projects",
+      "description": "Gestión de proyectos."
+    },
+    {
+      "name": "Technology",
+      "description": "Gestión de tecnologias."
+    },
+    {
+      "name": "Vacancie",
+      "description": "Gestión de vacantes."
+    },
+    {
+      "name": "Configuration",
+      "description": "Gestión de configuraciones de tablas y UI."
+    },
+    {
+      "name": "Notification",
+      "description": "Gestión de notificaciones del sistema."
+    },
+    
+    {
+      "name": "BasicFields",
+      "description": "Gestión de definiciones de campos básicos."
+    },
+    {
+      "name": "ExtraFields",
+      "description": "Gestión de definiciones de campos extras personalizables."
+    },
+    {
+      "name": "Personnel",
+      "description": "Gestión de registros de personal."
+    },
+    {
+      "name": "StateProjects",
+      "description": "Gestión de los estados de los proyectos."
+    }
+  ]
+}
